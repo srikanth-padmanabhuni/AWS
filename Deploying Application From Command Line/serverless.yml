@@ -1,0 +1,73 @@
+service: sls-crud
+frameworkVersion: '2'
+
+custom:
+  settings:
+    EMPLOYEE_TABLE: employees
+
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  region: us-east-1
+  environment: ${self:custom.settings}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.settings.EMPLOYEE_TABLE}"
+
+functions:
+  createEmployee:
+    handler: handler.createEmployee
+    events:
+    - http:
+        path: /createEmployee
+        method: post
+  getAllEmployess:
+    handler: handler.getAllEmployees
+    events:
+    - http:
+        path: /getAllEmployees
+        method: get
+  getEmployee:
+    handler: handler.getEmployee
+    events:
+    - http:
+        path: /getEmployee/{id}
+        method: get
+  deleteEmployee:
+    handler: handler.deleteEmployee
+    events:
+    - http:
+        path: /deleteEmployee/{id}
+        method: delete
+  updateEmployee:
+    handler: handler.updateEmployee
+    events:
+    - http:
+        path: /updateEmployee/{id}
+        method: put
+
+resources:
+  Resources:
+    EmployeesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+        - AttributeName: "uuid"
+          AttributeType: "S"
+        KeySchema:
+        - AttributeName: "uuid"
+          KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.settings.EMPLOYEE_TABLE}
