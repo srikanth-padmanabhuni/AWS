@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'medicine-inventory. Adding, Updating, Deleting Medicines from inventory
+  table
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+    Runtime: nodejs14.x
+    Environment:
+      Variables:
+        TABLE_NAME: medicine-inventory
+Resources:
+  GetMedicines:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetMedicines
+      Handler: app.getMedicines
+      Events:
+        GetMedicines:
+          Type: Api
+          Properties:
+            Path: /get/medicines
+            Method: get
+      Layers:
+      - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
+  GetMedicine:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetMedicine
+      Handler: app.getMedicine
+      Events:
+        GetMedicine:
+          Type: Api
+          Properties:
+            Path: /get/medicine/{id}
+            Method: get
+      Layers:
+      - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
+  UpdateMedicine:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: UpdateMedicine
+      Handler: app.updateMedicine
+      Events:
+        UpdateMedicine:
+          Type: Api
+          Properties:
+            Path: /update/medicine/{id}
+            Method: put
+      Layers:
+      - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
+  CreateMedicine:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: CreateMedicine
+      Handler: app.createMedicine
+      Events:
+        CreateMedicine:
+          Type: Api
+          Properties:
+            Path: /create/medicine
+            Method: post
+      Layers:
+      - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
+  DeleteMedicine:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: DeleteMedicine
+      Handler: app.deleteMedicine
+      Events:
+        DeleteMedicine:
+          Type: Api
+          Properties:
+            Path: /delete/medicine/{id}
+            Method: delete
+      Layers:
+      - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
+  MedicineInventoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: uuid
+        AttributeType: S
+      KeySchema:
+      - AttributeName: uuid
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      TableName: medicine-inventory
+Outputs:
+  GetMedicinesApi:
+    Description: API Gateway endpoint URL for Prod stage for Get Medicines function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/get/medicines
+  GetMedicineApi:
+    Description: API Gateway endpoint URL for Prod stage for Get Medicine function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/get/medicine/{id}
+  UpdateMedicineApi:
+    Description: API Gateway endpoint URL for Prod stage for Update Medicine function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/update/medicine/{id}
+  CreateMedicineApi:
+    Description: API Gateway endpoint URL for Prod stage for Create Medicine function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/create/medicine
+  DeleteMedicineApi:
+    Description: API Gateway endpoint URL for Prod stage for Delete Medicine function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/delete/medicine/{id}
