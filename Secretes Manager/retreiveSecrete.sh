@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SECRET_KEY=rdsinstanceemp #<YOUR_SECRETE_KEY_ID>
+SECRET_KEY=<YOUR_SECRETE_KEY_ID>
 
 # Get entire secret JSON
 aws secretsmanager get-secret-value \
