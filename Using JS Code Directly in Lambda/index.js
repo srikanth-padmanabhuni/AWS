@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 AWS.config.update({
-    ewgion: 'us-east-1'
+    region: 'us-east-1'
 });
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const dynamodbTableName = 'employee';
