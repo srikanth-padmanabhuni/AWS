@@ -12,6 +12,17 @@ Globals:
         TABLE_NAME: medicine-inventory
 
 Resources:
+  MedicineInventoryApis:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors: "'*'"
+      Auth:
+        DefaultAuthorizer: MedicineInventoryAuthorizer
+        Authorizers:
+          MedicineInventoryAuthorizer:
+            UserPoolArn: arn:aws:cognito-idp:us-east-1:990710882972:userpool/us-east-1_EJbvgyGAK
+  
   GetMedicines:
     Type: AWS::Serverless::Function
     Properties:
@@ -23,6 +34,7 @@ Resources:
           Properties:
             Path: /get/medicines
             Method: get
+            RestApiId: !Ref MedicineInventoryApis
       Layers:
         - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
   
@@ -37,6 +49,7 @@ Resources:
           Properties:
             Path: /get/medicine/{id}
             Method: get
+            RestApiId: !Ref MedicineInventoryApis
       Layers:
         - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
     
@@ -51,6 +64,7 @@ Resources:
           Properties:
             Path: /update/medicine/{id}
             Method: put
+            RestApiId: !Ref MedicineInventoryApis
       Layers:
         - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
 
@@ -65,6 +79,7 @@ Resources:
           Properties:
             Path: /create/medicine
             Method: post
+            RestApiId: !Ref MedicineInventoryApis
       Layers:
         - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
 
@@ -79,8 +94,10 @@ Resources:
           Properties:
             Path: /delete/medicine/{id}
             Method: delete
+            RestApiId: !Ref MedicineInventoryApis
       Layers:
         - arn:aws:lambda:us-east-1:990710882972:layer:medicine-utilities:3
+
 
   MedicineInventoryTable:
       Type: AWS::DynamoDB::Table
@@ -95,20 +112,3 @@ Resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: medicine-inventory
-
-Outputs:
-  GetMedicinesApi:
-    Description: "API Gateway endpoint URL for Prod stage for Get Medicines function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/get/medicines"
-  GetMedicineApi:
-    Description: "API Gateway endpoint URL for Prod stage for Get Medicine function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/get/medicine/{id}"
-  UpdateMedicineApi:
-    Description: "API Gateway endpoint URL for Prod stage for Update Medicine function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/update/medicine/{id}"
-  CreateMedicineApi:
-    Description: "API Gateway endpoint URL for Prod stage for Create Medicine function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/create/medicine"
-  DeleteMedicineApi:
-    Description: "API Gateway endpoint URL for Prod stage for Delete Medicine function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/delete/medicine/{id}"
