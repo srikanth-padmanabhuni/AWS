@@ -1,22 +1,4 @@
 /**
- * Author: Srikanth Padmanabhuni
- * App: AWS Cognito Demo
- */
-
-/** 
- * Installations to be done 
-    - npm install --save amazon-cognito-identity-js
-    - npm install --save aws-sdk
-    - npm install --save request
-    - npm install --save jwk-to-pem
-    - npm install --save jsonwebtoken
-    - npm install --save node-fetch
-    - npm install --save express
-    - npm install --save dotenv
- * Create .env file and add all config details in it
-*/
-
-/**
  * Import all required packages
  */
 const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
@@ -25,27 +7,10 @@ const AWS = require('aws-sdk');
 const request = require('request');
 const jwkToPem = require('jwk-to-pem');
 const jwt = require('jsonwebtoken');
-//global.fetch = require('node-fetch');
-const express = require('express');
-const dotenv = require('dotenv');
-dotenv.config();
 
-// create a new express application
-const app = express();
-
-const PORT = process.env.PORT;
 const POOL_ID = process.env.POOL_ID;
 const POOL_REGION = process.env.POOL_REGION;
 const APP_CLIENT_ID = process.env.APP_CLIENT_ID;
-
-// Initialize the express app to listen on some specific port
-app.listen(PORT, () => {
-    console.log(`App is up and running on port ${PORT}`);
-})
-
-// Make use of json body and ur encoding by express
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Then define pool info
 const poolData = {    
@@ -56,12 +21,9 @@ const poolData = {
 // Initislize the user pool
 const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
-app.post('/login', (req, res) => {
-
+exports.loginUser = (req, res) => {
     const loginDetails = req.body;
-    
-    const userName = loginDetails.userName;
-    const password = loginDetails.password;
+    const {userName, password} = loginDetails;
 
     // Initialize authentication details
     var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
@@ -95,10 +57,9 @@ app.post('/login', (req, res) => {
     } catch(err) {
         return res.status(500).send(err);
     }
-})
+}
 
-app.post('/register', (req, res) => {
-
+exports.registerUser = (req, res) => {
     const regitrationDetails = req.body;
 
     // This list is used when we need additional details like
@@ -120,53 +81,9 @@ app.post('/register', (req, res) => {
     } catch(err) {
         return res.status(500).send(err);
     }
-})
+}
 
-app.post('/changePassword', (req, res) => {
-    const changePasswordDetails = req.body;
-
-    const userName = changePasswordDetails.userName;
-    const password = changePasswordDetails.password;
-    const newPassword = changePasswordDetails.newPassword;
-
-    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-        Username: userName,
-        Password: password,
-    });
-
-    var userData = {
-        Username: userName,
-        Pool: userPool
-    };
-    
-    try {
-        var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
-        cognitoUser.authenticateUser(authenticationDetails, {
-            onSuccess: function (result) {
-                cognitoUser.changePassword(password, newPassword, (err, result) => {
-                    if (err) {
-                        console.log(err);
-                        return res.status(500).send(err);
-                    } else {
-                        console.log("Successfully changed password of the user.");
-                        console.log(result);
-                        return res.status(200).send("Successfully changed the password!!!");
-                    }
-                });
-            },
-            onFailure: function (err) {
-                console.log(err);
-                return res.status(500).send(err);
-            },
-        });
-    } catch(err) {
-        console.log(err);
-        return res.status(500).send(err);
-    }
-
-})
-
-app.post('/validateToken', (req, res) => {
+exports.validateToken = (req, res) => {
     const token = req.body.token;
     request({
         url: `https://cognito-idp.${POOL_REGION}.amazonaws.com/${poolData.UserPoolId}/.well-known/jwks.json`,
@@ -217,9 +134,52 @@ app.post('/validateToken', (req, res) => {
             return res.status(500).send("An error occurred while validating the token");
         }
     });
-})
+}
 
-app.delete('/deleteUser', (req, res) => {
+exports.changePassword = (req, res) => {
+    const changePasswordDetails = req.body;
+
+    const userName = changePasswordDetails.userName;
+    const password = changePasswordDetails.password;
+    const newPassword = changePasswordDetails.newPassword;
+
+    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+        Username: userName,
+        Password: password,
+    });
+
+    var userData = {
+        Username: userName,
+        Pool: userPool
+    };
+    
+    try {
+        var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+        cognitoUser.authenticateUser(authenticationDetails, {
+            onSuccess: function (result) {
+                cognitoUser.changePassword(password, newPassword, (err, result) => {
+                    if (err) {
+                        console.log(err);
+                        return res.status(500).send(err);
+                    } else {
+                        console.log("Successfully changed password of the user.");
+                        console.log(result);
+                        return res.status(200).send("Successfully changed the password!!!");
+                    }
+                });
+            },
+            onFailure: function (err) {
+                console.log(err);
+                return res.status(500).send(err);
+            },
+        });
+    } catch(err) {
+        console.log(err);
+        return res.status(500).send(err);
+    }
+}
+
+exports.deleteUser = (req, res) => {
     const deleteUserDetails = req.body;
 
     const userName = deleteUserDetails.userName;
@@ -236,7 +196,6 @@ app.delete('/deleteUser', (req, res) => {
     };
 
     try {
-
         var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
 
         cognitoUser.authenticateUser(authenticationDetails, {
@@ -263,9 +222,9 @@ app.delete('/deleteUser', (req, res) => {
     } catch(err) {
         return res.status(500).send(err);
     }
-})
+}
 
-app.post('/logout', (req, res) => {
+exports.logOut = (req, res) => {
     const accessToken = req.body.token;
     
     var params = {
@@ -284,4 +243,4 @@ app.post('/logout', (req, res) => {
     //       return true;
     //     }
     // });
-})
+}

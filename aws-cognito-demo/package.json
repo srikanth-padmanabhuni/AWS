@@ -1,8 +1,8 @@
 {
   "name": "aws-cognito-demo",
   "version": "1.0.0",
-  "description": "Demo of Login Signup IsuserLoggedIn using AWS Cognito",
-  "main": "index.js",
+  "description": "Demo of Login Signup IsUserLoggedIn using AWS Cognito",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
