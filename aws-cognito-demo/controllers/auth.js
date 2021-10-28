@@ -2,11 +2,12 @@
  * Import all required packages
  */
 const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
-const CognitoUserPool = AmazonCognitoIdentity.CognitoUserPool;
 const AWS = require('aws-sdk');
 const request = require('request');
 const jwkToPem = require('jwk-to-pem');
 const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator');
+const { getValidationErrorsArray, getAuthenticationDetailsObj, getUserDataObj } = require('../utilities/utilities');
 
 const POOL_ID = process.env.POOL_ID;
 const POOL_REGION = process.env.POOL_REGION;
@@ -22,23 +23,18 @@ const poolData = {
 const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
 exports.loginUser = (req, res) => {
+    
     const loginDetails = req.body;
     const {userName, password} = loginDetails;
 
     // Initialize authentication details
-    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-        Username : userName,
-        Password : password,
-    });
+    const authenticationDetails = getAuthenticationDetailsObj(userName, password);
 
     // Initialize the cognito user for a given userpool and authenticate with password
-    var userData = {
-        Username : userName,
-        Pool : userPool
-    };
-    var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+    const userData = getUserDataObj(userName, userPool)
 
     try {
+        var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
         // Authenticate username and password for a given cognito user in given pool
         cognitoUser.authenticateUser(authenticationDetails, {
             onSuccess: function (result) {
@@ -60,14 +56,22 @@ exports.loginUser = (req, res) => {
 }
 
 exports.registerUser = (req, res) => {
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+        const errors = getValidationErrorsArray(validationErrors);
+        return res.status(500).send({
+            errors: errors
+        });
+    }
+
     const regitrationDetails = req.body;
 
     // This list is used when we need additional details like
     // name, dob, place, phn number etc
     const attributeList = [];
 
-    const userName = regitrationDetails.userName;
-    const password = regitrationDetails.password;
+    const {userName, password} = regitrationDetails;
     try {
         userPool.signUp(userName, password, attributeList, null, function(err, result){
             if (err) {
@@ -137,21 +141,20 @@ exports.validateToken = (req, res) => {
 }
 
 exports.changePassword = (req, res) => {
+    
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+        const errors = getValidationErrorsArray(validationErrors);
+        return res.status(500).send({
+            errors: errors
+        });
+    }
+
     const changePasswordDetails = req.body;
-
-    const userName = changePasswordDetails.userName;
-    const password = changePasswordDetails.password;
-    const newPassword = changePasswordDetails.newPassword;
-
-    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-        Username: userName,
-        Password: password,
-    });
-
-    var userData = {
-        Username: userName,
-        Pool: userPool
-    };
+    const {userName, password, newPassword} = changePasswordDetails;
+    
+    const authenticationDetails = getAuthenticationDetailsObj(userName, password);
+    const userData = getUserDataObj(userName, userPool);
     
     try {
         var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
@@ -182,22 +185,13 @@ exports.changePassword = (req, res) => {
 exports.deleteUser = (req, res) => {
     const deleteUserDetails = req.body;
 
-    const userName = deleteUserDetails.userName;
-    const password = deleteUserDetails.password;
+    const {userName, password} = deleteUserDetails;
 
-    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-        Username: userName,
-        Password: password,
-    });
-
-    var userData = {
-        Username: userName,
-        Pool: userPool
-    };
+    const authenticationDetails = getAuthenticationDetailsObj(userName, password);
+    const userData = getUserDataObj(userName, userPool)
 
     try {
         var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
-
         cognitoUser.authenticateUser(authenticationDetails, {
             onSuccess: function (result) {
                 cognitoUser.deleteUser((err, result) => {
@@ -218,7 +212,6 @@ exports.deleteUser = (req, res) => {
                 return res.status(500).send(err);
             },
         });
-
     } catch(err) {
         return res.status(500).send(err);
     }

@@ -16,6 +16,9 @@ const app = express();
 // Routes
 const authRoutes = require("./routes/auth");
 
+//logger
+const { log } = require("./loggers/logger");
+
 // Initialize the express app to listen on some specific port
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
@@ -27,4 +30,6 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/auth', authRoutes);
+app.use(log);
+
+app.use('/auth', log, authRoutes);
