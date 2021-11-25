@@ -1,0 +1,25 @@
+<h1>Blogs</h1>
+<br>
+<br>
+<form [formGroup]="blogForm">
+  <input formControlName="title" placeholder="Title of Blog">&nbsp;&nbsp;
+  <input formControlName="author" placeholder="Author of Blog">&nbsp;&nbsp;
+  <input formControlName="content" placeholder="Content of the Blog">&nbsp;&nbsp;
+  <input formControlName="tags" placeholder="Comma seperated Tags">&nbsp;&nbsp;
+
+  <button (click)="createBlog()">Add Blog</button>
+</form>
+
+<ul>
+  <li *ngFor="let blog of blogsList">
+    <h4>{{blog.title}}</h4>
+    <pre>{{blog.content}}</pre>
+    <span>
+      <p>
+        By {{blog.author}} <br/>
+        Tags: {{blog.tags}}
+      </p>
+    </span>
+    <hr/>
+  </li>
+</ul>

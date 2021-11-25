@@ -25,6 +25,16 @@ app.listen(PORT, () => {
     console.log(`App is up and running on port ${PORT}`);
 })
 
+// Kind of cors
+const frontendUrl = process.env.frontendUrl;
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", frontendUrl);
+    res.header("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    next();
+  });
+
+
 // Middlewares
 app.use(express.json());
 
